@@ -150,6 +150,7 @@ function LayerRow({
   const cls = [
     'layer',
     selected ? 'sel' : '',
+    section.hidden ? 'is-off' : '',
     dragging ? 'dragging' : '',
     over && dragState?.edge === 'top' ? 'drag-over-top' : '',
     over && dragState?.edge === 'bottom' ? 'drag-over-bottom' : '',
@@ -185,11 +186,31 @@ function LayerRow({
       onMouseEnter={() => actions.hover(section.id)}
       onMouseLeave={() => actions.hover(null)}
     >
-      <span className={`layer-handle ${pinned ? 'is-hidden' : ''}`} title="Drag to reorder">
-        <Ph_ name="DotsSixVertical" size={14} weight="bold" />
+      {/* Header and footer can't be reordered, so their first slot shows or
+          hides them instead. */}
+      {pinned ? (
+        <button
+          className="layer-eye"
+          title={`${section.hidden ? 'Show' : 'Hide'} ${def.label}`}
+          aria-label={`${section.hidden ? 'Show' : 'Hide'} ${def.label}`}
+          onClick={(e) => {
+            e.stopPropagation()
+            actions.setSectionHidden(section.id, !section.hidden)
+          }}
+        >
+          <Ph_ name={section.hidden ? 'EyeSlash' : 'Eye'} size={14} />
+        </button>
+      ) : (
+        <span className="layer-handle" title="Drag to reorder">
+          <Ph_ name="DotsSixVertical" size={14} weight="bold" />
+        </span>
+      )}
+      {/* Its own group so the icon-to-label gap can stay generous while the
+          leading control (drag handle / eye) sits close on the outside. */}
+      <span className="layer-body">
+        <span className="layer-icon"><Ph_ name={def.icon} size={16} /></span>
+        <span className="layer-title">{def.label}</span>
       </span>
-      <span className="layer-icon"><Ph_ name={def.icon} size={16} /></span>
-      <span className="layer-title">{def.label}</span>
       {!pinned && (
         <button
           className="layer-delete"
@@ -207,10 +228,12 @@ function LayerRow({
   )
 }
 
-function RootLevel() {
+function RootLevel({ onAdd }: { onAdd: (index: number) => void }) {
   const doc = useStore((s) => s.doc)
   const page = useStore(currentPage)
   const [dragState, setDragState] = useState<DragState>({ id: null, over: null, edge: 'top' })
+  const canInsert = page.insertable.length > 0
+  const empty = page.body.length === 0
 
   return (
     <div className="panel-scroll">
@@ -224,12 +247,32 @@ function RootLevel() {
 
         <div className="group-label">
           {page.name}
-          <span className="group-count">{page.body.length}</span>
+          {!empty && <span className="group-count">{page.body.length}</span>}
+          {canInsert && !empty && (
+            <button
+              className="group-add"
+              title="Add section"
+              aria-label="Add section"
+              onClick={() => onAdd(page.body.length)}
+            >
+              <Ph_ name="Plus" size={14} />
+            </button>
+          )}
         </div>
-        {page.body.length === 0 && (
-          <div className="hint" style={{ padding: '4px 12px 8px' }}>
-            No sections yet — add one to get going.
+        {/* An empty page puts the add action where the sections will go,
+            rather than only at the foot of the panel. */}
+        {empty && canInsert && (
+          <div className="list-empty">
+            <span className="list-empty-icon"><Ph_ name="Stack" size={18} /></span>
+            <span className="list-empty-title">No sections yet</span>
+            <span className="list-empty-sub">Add a section to start building this page.</span>
+            <button className="btn-ui primary panel-add" onClick={() => onAdd(0)}>
+              <Ph_ name="Plus" size={16} /> Add section
+            </button>
           </div>
+        )}
+        {empty && !canInsert && (
+          <div className="hint" style={{ padding: '4px 12px 8px' }}>This page has no sections.</div>
         )}
         {page.body.map((s, i) => (
           <LayerRow
@@ -339,8 +382,9 @@ function SectionsPane({ onAdd }: { onAdd: (index: number) => void }) {
   return (
     <div className="panel-stack">
       <div className={`panel-level level-root ${open ? 'is-covered' : ''}`} aria-hidden={drilled}>
-        <RootLevel />
-        {page.insertable.length > 0 && (
+        <RootLevel onAdd={onAdd} />
+        {/* While the page is empty, the button lives in the list instead. */}
+        {page.insertable.length > 0 && page.body.length > 0 && (
           <div className="panel-foot">
             <button className="btn-ui primary panel-add" onClick={() => onAdd(page.body.length)}>
               <Ph_ name="Plus" size={16} /> Add section

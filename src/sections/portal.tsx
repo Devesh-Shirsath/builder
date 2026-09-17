@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Btn, Ed, Ico, Img, Pick } from '../canvas/Bits'
+import { Btn, Ed, Ico, Img, Pick, useSection } from '../canvas/Bits'
 import { Ph_ } from '../ui/Phosphor'
 
 /* ==========================================================================
@@ -548,6 +548,7 @@ function EndpointCard({ p, i }: { p: P; i: number }) {
 }
 
 export function FeaturedApis({ p, variant }: { p: P; variant: string }) {
+  const { interactive = true } = useSection()
   const [tab, setTab] = useState(0)
   const apis = arr(p.apis)
 
@@ -556,9 +557,15 @@ export function FeaturedApis({ p, variant }: { p: P; variant: string }) {
       <div className="container pad">
         <Head p={p} />
         <div className="api-tabs" role="tablist">
-          {arr(p.categories).map((c, i) => (
-            <button key={i} role="tab" className={tab === i ? 'on' : ''} onClick={() => setTab(i)}>{c.label}</button>
-          ))}
+          {arr(p.categories).map((c, i) =>
+            interactive ? (
+              <button key={i} role="tab" className={tab === i ? 'on' : ''} onClick={() => setTab(i)}>{c.label}</button>
+            ) : (
+              // A thumbnail can't nest a <button> inside the card that's
+              // already clickable — same look, no interactive element.
+              <span key={i} role="tab" className={tab === i ? 'on' : ''}>{c.label}</span>
+            ),
+          )}
         </div>
         <div className="grid g3 api-tab-cards">
           {apis.slice(0, 3).map((_, i) => <ApiCard key={i} i={i} />)}
@@ -627,6 +634,7 @@ function TryOut({ p }: { p: P }) {
 }
 
 export function Marketplace({ p, variant }: { p: P; variant: string }) {
+  const { interactive = true } = useSection()
   const [active, setActive] = useState(0)
   const features = arr(p.features)
 
@@ -649,9 +657,13 @@ export function Marketplace({ p, variant }: { p: P; variant: string }) {
               )}
             </div>
             <div className="mk-dots">
-              {features.map((_, k) => (
-                <button key={k} className={k === i ? 'on' : ''} onClick={() => setActive(k)} aria-label={`Feature ${k + 1}`} />
-              ))}
+              {features.map((_, k) =>
+                interactive ? (
+                  <button key={k} className={k === i ? 'on' : ''} onClick={() => setActive(k)} aria-label={`Feature ${k + 1}`} />
+                ) : (
+                  <span key={k} className={k === i ? 'on' : ''} aria-hidden="true" />
+                ),
+              )}
             </div>
           </div>
           <div className="mk-deck">

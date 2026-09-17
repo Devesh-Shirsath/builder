@@ -8,8 +8,14 @@ interface SectionCtxValue {
   id: string
   props: Record<string, any>
   editing: boolean
+  /** False for a thumbnail rendered inside another clickable element — a
+      layout card, a template preview. These never get real interactive
+      children (a <button>, a click handler), since nesting interactive
+      content is invalid HTML and breaks the outer element's own click.
+      Defaults to true so ordinary canvas rendering is unaffected. */
+  interactive?: boolean
 }
-const SectionCtx = createContext<SectionCtxValue>({ id: '', props: {}, editing: false })
+const SectionCtx = createContext<SectionCtxValue>({ id: '', props: {}, editing: false, interactive: true })
 export const SectionProvider = SectionCtx.Provider
 export const useSection = () => useContext(SectionCtx)
 
@@ -50,12 +56,16 @@ type EdProps = {
  * The DOM text is written imperatively so React never fights contenteditable.
  */
 export function Ed({ path, as: Tag = 'span', className = '', multiline = false, style }: EdProps) {
-  const { id, props, editing } = useSection()
+  const { id, props, editing, interactive = true } = useSection()
   const selected = useSelected(path)
   const value = String(getAt(props, path) ?? '')
   const ref = useRef<HTMLElement | null>(null)
   const [live, setLive] = useState(false)
   useRevealOnSelect(selected, ref)
+  // A non-interactive thumbnail can't render a real <button> — it would nest
+  // inside the card that's already clickable. Everything else (h1, p, div…)
+  // is unaffected, since only <button> is invalid as descendant content.
+  const RenderTag = !interactive && Tag === 'button' ? 'span' : Tag
 
   useEffect(() => {
     const el = ref.current
@@ -98,14 +108,14 @@ export function Ed({ path, as: Tag = 'span', className = '', multiline = false, 
 
   if (!editing) {
     return (
-      <Tag className={className} style={style}>
+      <RenderTag className={className} style={style}>
         {value}
-      </Tag>
+      </RenderTag>
     )
   }
 
   return (
-    <Tag
+    <RenderTag
       ref={ref as any}
       className={`editable ${className} ${selected ? 'sel' : ''}`}
       style={{ whiteSpace: multiline ? 'pre-wrap' : undefined, ...style }}

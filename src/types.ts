@@ -26,6 +26,8 @@ export interface Section {
   variant: string
   surface: Surface
   props: Record<string, any>
+  /** Site chrome can be switched off without losing what's in it. */
+  hidden?: boolean
 }
 
 export type PageId = 'home' | 'auth' | 'signup' | 'contact' | 'guides' | 'reference' | 'recipes'

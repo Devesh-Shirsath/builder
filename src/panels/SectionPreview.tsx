@@ -11,6 +11,13 @@ import { SectionBody } from '../sections/render'
 const VIRTUAL_WIDTH = 1280
 const WIDTHS = { compact: 960, default: 1120, wide: 1280 }
 
+/** @types/react doesn't type the `inert` DOM attribute yet — spreading an
+ * `any`-typed object is the narrowest way to still emit it. This is a
+ * thumbnail, not a page: it already sits inside another clickable card (a
+ * layout option, a template), so the whole subtree is unfocusable and
+ * unclickable on top of `aria-hidden` and `interactive: false` below. */
+const INERT: any = { inert: '' }
+
 /**
  * A live, scaled-down render of one section layout — the real component, not a
  * wireframe — so the thumbnail carries the brand colour, chrome treatment,
@@ -78,6 +85,7 @@ export const SectionPreview = memo(function SectionPreview({
       className={`sp ${clipped ? 'clipped' : ''}`}
       style={{ height: scale ? Math.min(full, maxHeight) : maxHeight * 0.6 }}
       aria-hidden="true"
+      {...INERT}
     >
       <div
         ref={inner}
@@ -95,7 +103,7 @@ export const SectionPreview = memo(function SectionPreview({
         } as React.CSSProperties}
       >
         <section className={`surface surf-${section.surface} ${type === 'nav' || type === 'footer' ? 'chrome-surface' : ''}`}>
-          <SectionProvider value={{ id: section.id, props: section.props, editing: false }}>
+          <SectionProvider value={{ id: section.id, props: section.props, editing: false, interactive: false }}>
             <SectionBody section={section} />
           </SectionProvider>
         </section>

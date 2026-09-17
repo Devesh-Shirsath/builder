@@ -418,7 +418,7 @@ export const actions = {
   },
   /** Back out of whatever the panel drilled into. */
   panelBack() {
-    patch({ panel: 'root', selection: null })
+    patch({ panel: 'root', selection: null, library: null })
   },
   hover(id: string | null) {
     if (state.hovered !== id) patch({ hovered: id })
@@ -464,6 +464,12 @@ export const actions = {
   setSurface(sectionId: string, surface: Surface) {
     lastEditKey = ''
     commit(replaceSection(state.doc, sectionId, (s) => ({ ...s, surface })))
+  },
+
+  /** Show or hide the shared header or footer. Undoable, like any other edit. */
+  setSectionHidden(sectionId: string, hidden: boolean) {
+    lastEditKey = ''
+    commit(replaceSection(state.doc, sectionId, (s) => ({ ...s, hidden })))
   },
 
   addListItem(sectionId: string, path: string, item: any) {

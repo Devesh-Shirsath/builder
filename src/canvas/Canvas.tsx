@@ -199,7 +199,7 @@ export function Canvas({ onAdd }: { onAdd: (index: number) => void }) {
           style={style}
         >
           {/* Auth and the sign-up form are standalone screens with no site chrome. */}
-          {page.hasChrome && <SectionShell section={doc.nav} pinned />}
+          {page.hasChrome && !doc.nav.hidden && <SectionShell section={doc.nav} pinned />}
 
           {page.body.length === 0 && !preview && canInsert && (
             <div
@@ -237,7 +237,7 @@ export function Canvas({ onAdd }: { onAdd: (index: number) => void }) {
             <Inserter index={page.body.length} onAdd={onAdd} dropAt={dropAt} setDropAt={setDropAt} />
           )}
 
-          {page.hasChrome && <SectionShell section={doc.footer} pinned />}
+          {page.hasChrome && !doc.footer.hidden && <SectionShell section={doc.footer} pinned />}
         </div>
       </div>
     </div>
