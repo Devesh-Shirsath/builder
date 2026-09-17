@@ -1,0 +1,65 @@
+/* ==========================================================================
+   TOKEN LAYERS  —  shared by the portal shell, the reference doc and the
+   builder canvas. Every themed surface in the app reads from this one place.
+
+   1. Primitive  --accent-1..12 / --gray-1..12 (+ alpha), --accent-contrast,
+                 --dark-gray-* / --dark-accent-*. Generated at runtime by
+                 src/theme/palette.ts and applied to `.app-root` as inline
+                 custom properties. Never used directly by a component rule.
+   2. Semantic   Everything below. Names describe ROLE, not colour.
+   3. Component  portal.css / doc.css / canvas.css. Semantic tokens only.
+
+   Changing the accent rewrites layer 1. Layers 2 and 3 never change. That is
+   the whole trick: no component knows what colour the brand is.
+
+   Scoped to `.app-root` rather than `:root` so the builder chrome keeps its
+   own `--ui-*` namespace and is never themed by the customer's brand.
+   ========================================================================== */
+
+.app-root {
+  /* --- surfaces --------------------------------------------------------- */
+  --surface-page: var(--color-background);
+  --surface-chrome: var(--accent-2); /* nav + footer: brand-tinted near-white */
+  --surface-raised: var(--gray-1);
+  --surface-sunken: var(--gray-a3);
+  /* --- borders ---------------------------------------------------------- */
+  --border-subtle: var(--gray-a4);
+  --border-default: var(--gray-a6);
+  --border-strong: var(--gray-a8);
+  /* --- text ------------------------------------------------------------- */
+  --text-hi: var(--gray-12);      /* headings */
+  --text-default: var(--gray-11); /* body */
+  --text-subtle: var(--gray-10);  /* metadata, types */
+  /* --- brand ------------------------------------------------------------ */
+  --brand-solid: var(--accent-9);
+  --brand-solid-hover: var(--accent-10);
+  --brand-on-solid: var(--accent-contrast); /* auto black-or-white, APCA-chosen */
+  --brand-text: var(--accent-11);
+  --brand-heading: var(--accent-12);
+  --brand-tint: var(--accent-a3);
+  --brand-tint-hover: var(--accent-a4);
+  --brand-border: var(--accent-a7);
+  --focus-ring: var(--accent-8);
+  /* --- always-dark code panel, hue-matched to the brand ----------------- */
+  --code-bg: var(--dark-gray-2);
+  --code-bg-header: var(--dark-gray-3);
+  --code-border: var(--dark-gray-5);
+  --code-text: var(--dark-gray-12);
+  --code-text-subtle: var(--dark-gray-11);
+  --code-gutter: var(--dark-gray-9);
+  --code-accent: var(--dark-accent-11);
+  /* --- decorative washes (image placeholders, hero fallbacks) ----------
+     Which colour the wash pulls from, and how strongly. The neutral chrome
+     treatment re-points these at the gray scale so nothing but the
+     interactive bits carries the hue. -------------------------------------- */
+  --decor: var(--accent-9);
+  --decor-strong: 22%;
+  --decor-weak: 6%;
+  /* --- shape ------------------------------------------------------------ */
+  --radius: 8px;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-lg: calc(var(--radius) * 1.6);
+}
+
+/* Let the OS form controls and scrollbars follow the chosen appearance. */
+.app-root[data-appearance='dark'] { color-scheme: dark; }

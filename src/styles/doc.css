@@ -1,0 +1,342 @@
+/* ==========================================================================
+   THE API REFERENCE PAGE
+
+   Component rules ported from the dvsh prototype's globals.css (which is the
+   code version of the Framer reference screen), re-scoped under `.doc-root`
+   so they live inside the portal's white content card. Semantic tokens only —
+   the annotated contrast decisions are kept verbatim in the comments.
+   ========================================================================== */
+
+.doc-root {
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--text-default);
+}
+
+.doc {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 32px;
+  padding: 26px 34px 80px;
+  align-items: start;
+}
+
+@media (max-width: 1180px) {
+  .doc { grid-template-columns: minmax(0, 1fr); }
+  .doc__aside { display: none; }
+}
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  /* gray-11, not gray-10: at 10px the subtle step drops to APCA Lc ~72, below
+     what the original site gave breadcrumbs. */
+  color: var(--text-default);
+}
+.crumbs__sep { opacity: 0.5; }
+
+.doc__title {
+  margin: 6px 0 0;
+  font-family: var(--font-mono);
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: var(--text-hi);
+}
+
+.doc__lede {
+  max-width: 62ch;
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-default);
+}
+
+.endpoint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+}
+.endpoint__path {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-hi);
+}
+
+.doc__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.doc__toolbar-spacer { flex: 1; }
+
+.doc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px var(--border-default);
+  background: transparent;
+  color: var(--text-default);
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 120ms ease, color 120ms ease;
+}
+.doc-btn:hover { background: var(--surface-sunken); color: var(--text-hi); }
+
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+}
+.segmented__btn {
+  padding: 5px 16px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-default);
+}
+.segmented__btn[aria-pressed='true'] {
+  background: var(--brand-solid);
+  color: var(--brand-on-solid);
+  font-weight: 600;
+}
+
+/* host card */
+.doc-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 22px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+}
+.doc-card__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-hi);
+}
+.doc-card__sub {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--text-subtle);
+}
+
+.doc-select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 230px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-page);
+  color: var(--text-default);
+  text-align: left;
+}
+.doc-select__value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-hi);
+}
+.doc-select__hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-subtle);
+}
+
+.doc-section { padding-top: 34px; }
+.doc-section__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--text-hi);
+}
+.doc-section__icon { color: var(--brand-text); display: inline-flex; }
+.doc-section__note {
+  max-width: 62ch;
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--text-subtle);
+}
+
+/* parameter rows */
+.param {
+  padding: 15px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.param__head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.param__name {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-hi);
+}
+.param__type { font-size: 11.5px; color: var(--text-subtle); }
+/* Fixed red, like the method badges: "required" is a semantic warning, not a
+   brand accent. */
+.param__required { font-size: 10px; font-weight: 600; color: #ce2c31; }
+.doc-root[data-appearance='dark'] .param__required { color: #ff9592; }
+.param__desc {
+  max-width: 64ch;
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-default);
+}
+
+.chip-fmt {
+  display: inline-block;
+  margin: 8px 6px 0 0;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--brand-tint);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--brand-text);
+}
+
+.doc-link { color: var(--brand-text); font-weight: 500; }
+.doc-link:hover { text-decoration: underline; }
+
+/* callout — brand-tinted panel */
+.callout {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-lg);
+  background: var(--brand-tint);
+}
+.callout__body {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--brand-heading);
+}
+
+/* ==========================================================================
+   CODE PANELS (always dark, hue-matched to the brand)
+   ========================================================================== */
+
+.doc__aside {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.code {
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--code-bg);
+  transition: background 160ms ease;
+}
+.code__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 8px 7px 14px;
+  background: var(--code-bg-header);
+  border-bottom: 1px solid var(--code-border);
+}
+.code__title { font-size: 12px; font-weight: 600; color: var(--code-text); }
+.code__actions { display: flex; align-items: center; gap: 2px; }
+.code__lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: var(--radius-md);
+  color: var(--code-text-subtle);
+  font-size: 12px;
+}
+.code__lang:hover { background: var(--code-border); }
+.code__icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-md);
+  color: var(--code-text-subtle);
+}
+.code__icon:hover { background: var(--code-border); color: var(--code-text); }
+
+.code__body {
+  display: flex;
+  gap: 12px;
+  padding: 10px 12px 14px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.75;
+}
+.code__gutter {
+  flex-shrink: 0;
+  text-align: right;
+  color: var(--code-gutter);
+  user-select: none;
+}
+.code__lines {
+  white-space: pre;
+  /* step 12, not 11 — code is dense 11.5px monospace and needs the high-
+     contrast step. Step 11 measured Lc 62 here against the original's 95. */
+  color: var(--code-text);
+}
+.code__str { color: var(--code-accent); }
+.code__key { color: var(--code-text); }
+
+/* The response panel carries a status pill in its header. */
+.code__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--code-text-subtle);
+}
+.code__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #e5484d;
+}
+.code__dot.is-ok { background: #30a46c; }
