@@ -207,10 +207,24 @@ function BuilderBar({ onToast }: { onToast: (msg: string) => void }) {
 
       <div className="topbar-side end">
         <MoreMenu onToast={onToast} />
-        <button className="btn-ui tint" onClick={() => actions.setPreview(!preview)}>
-          <Ph_ name={preview ? 'EyeSlash' : 'Eye'} size={16} />
-          {preview ? 'Exit preview' : 'Preview'}
-        </button>
+        <div className="mode-switch" role="group" aria-label="Customise mode">
+          <button
+            className={!preview ? 'on' : ''}
+            aria-pressed={!preview}
+            onClick={() => actions.setPreview(false)}
+          >
+            <Ph_ name="NotePencil" size={16} />
+            Edit
+          </button>
+          <button
+            className={preview ? 'on' : ''}
+            aria-pressed={preview}
+            onClick={() => actions.setPreview(true)}
+          >
+            <Ph_ name="Eye" size={17} />
+            Preview
+          </button>
+        </div>
         <button className="btn-ui primary" onClick={() => onToast('Published')}>
           <Ph_ name="RocketLaunch" size={16} /> Publish Changes
         </button>
