@@ -73,22 +73,23 @@ function Arrows({ count = 3, active = 1 }: { count?: number; active?: number }) 
 }
 
 /** Code with line numbers and quoted strings picked out. Edited from the panel. */
-function Code({ text, numbered = true, className = '' }: { text: string; numbered?: boolean; className?: string }) {
+function Code({
+  text, path, numbered = true, className = '',
+}: { text: string; path?: string; numbered?: boolean; className?: string }) {
   const lines = String(text ?? '').split('\n')
-  return (
-    <pre className={`pcode ${className}`}>
-      {lines.map((line, i) => (
-        <div className="pcode-line" key={i}>
-          {numbered && <span className="pcode-n">{i + 1}</span>}
-          <span>
-            {line.split(/("[^"]*"|'[^']*')/g).map((part, j) =>
-              j % 2 ? <span key={j} className="pcode-s">{part}</span> : part,
-            )}
-          </span>
-        </div>
-      ))}
-    </pre>
-  )
+  const content = lines.map((line, i) => (
+    <div className="pcode-line" key={i}>
+      {numbered && <span className="pcode-n">{i + 1}</span>}
+      <span>
+        {line.split(/("[^"]*"|'[^']*')/g).map((part, j) =>
+          j % 2 ? <span key={j} className="pcode-s">{part}</span> : part,
+        )}
+      </span>
+    </div>
+  ))
+  return path
+    ? <Pick path={path} as="pre" className={`pcode ${className}`}>{content}</Pick>
+    : <pre className={`pcode ${className}`}>{content}</pre>
 }
 
 const Skel = ({ w = 60, className = '' }: { w?: number | string; className?: string }) => (
@@ -98,6 +99,23 @@ const Skel = ({ w = 60, className = '' }: { w?: number | string; className?: str
 /* ==================================================================== nav */
 
 export function PortalNav({ p }: { p: P }) {
+  const { editing, interactive = true } = useSection()
+  const [open, setOpen] = useState<number | null>(null)
+  const restricted = (item: any) => item?.visibility && item.visibility !== 'everyone'
+  const accessTitle = (item: any) => {
+    if (item?.visibility === 'logged-in') return 'Logged-in users only'
+    if (item?.visibility === 'logged-out') return 'Logged-out users only'
+    if (item?.visibility === 'role') return `Role: ${item.role ?? 'any'}`
+    if (item?.visibility === 'group') return `Group: ${item.group ?? 'any'}`
+    return ''
+  }
+  const actionAccess = (prefix: 'secondary' | 'cta') => ({
+    newTab: p[`${prefix}NewTab`],
+    visibility: p[`${prefix}Visibility`] ?? 'everyone',
+    role: p[`${prefix}Role`] ?? 'any',
+    group: p[`${prefix}Group`] ?? 'any',
+  })
+
   return (
     <div className="container pnav">
       {p.logoImage ? (
@@ -113,13 +131,93 @@ export function PortalNav({ p }: { p: P }) {
         </Pick>
       )}
       <nav className="pnav-links">
-        {arr(p.links).map((_, i) => (
-          <Ed key={i} path={`links[${i}].label`} as="a" className="navlink" />
-        ))}
+        {arr(p.links).map((item, i) => {
+          const base = `links[${i}]`
+          if (item?.dropdown) {
+            const isOpen = open === i
+            return (
+              <div
+                key={i}
+                className={`pnav-item pnav-dropdown ${isOpen ? 'open' : ''}`}
+                onMouseEnter={() => interactive && setOpen(i)}
+                onMouseLeave={() => interactive && setOpen(null)}
+              >
+                <button
+                  type="button"
+                  className="navlink pnav-dropdown-trigger"
+                  aria-haspopup="menu"
+                  aria-expanded={isOpen}
+                  onClick={() => interactive && setOpen(isOpen ? null : i)}
+                >
+                  <Ed path={`${base}.label`} />
+                  <Ph_ name="CaretDown" size={11} className="pnav-caret" />
+                  {editing && restricted(item) && <span className="pnav-access" title={accessTitle(item)}><Ph_ name="LockKey" size={11} /></span>}
+                </button>
+                {isOpen && (
+                  <div className="pnav-menu" role="menu">
+                    {arr(item.children).map((child, j) => (
+                      <a
+                        key={j}
+                        className="pnav-menu-item"
+                        href={child.href || '#'}
+                        target={child.newTab ? '_blank' : '_self'}
+                        rel={child.newTab ? 'noreferrer' : undefined}
+                        onClick={(e) => editing && e.preventDefault()}
+                      >
+                        <Ed path={`${base}.children[${j}].label`} />
+                        {child.newTab && <Ph_ name="ArrowSquareOut" size={12} />}
+                        {editing && restricted(child) && <span className="pnav-access" title={accessTitle(child)}><Ph_ name="LockKey" size={11} /></span>}
+                      </a>
+                    ))}
+                    {!arr(item.children).length && <span className="pnav-menu-empty">No dropdown items</span>}
+                  </div>
+                )}
+              </div>
+            )
+          }
+          return (
+            <a
+              key={i}
+              className="pnav-item-link"
+              href={item?.href || '#'}
+              target={item?.newTab ? '_blank' : '_self'}
+              rel={item?.newTab ? 'noreferrer' : undefined}
+              onClick={(e) => editing && e.preventDefault()}
+            >
+              <Ed path={`${base}.label`} className="navlink" />
+              {item?.newTab && <Ph_ name="ArrowSquareOut" size={11} />}
+              {editing && restricted(item) && <span className="pnav-access" title={accessTitle(item)}><Ph_ name="LockKey" size={11} /></span>}
+            </a>
+          )
+        })}
       </nav>
       <div className="pnav-actions">
-        {p.showSecondary && <Ed path="secondaryLabel" as="a" className="navlink pnav-login" />}
-        {p.showCta && <Ed path="ctaLabel" as="button" className="btn btn-primary btn-sm btn-pill" />}
+        {p.showSecondary && (
+          <a
+            className="pnav-action-link"
+            href={p.secondaryLabelHref || '#'}
+            target={p.secondaryNewTab ? '_blank' : '_self'}
+            rel={p.secondaryNewTab ? 'noreferrer' : undefined}
+            onClick={(e) => editing && e.preventDefault()}
+          >
+            <Ed path="secondaryLabel" className="navlink pnav-login" />
+            {p.secondaryNewTab && <Ph_ name="ArrowSquareOut" size={11} />}
+            {editing && restricted(actionAccess('secondary')) && <span className="pnav-access" title={accessTitle(actionAccess('secondary'))}><Ph_ name="LockKey" size={11} /></span>}
+          </a>
+        )}
+        {p.showCta && (
+          <a
+            className="pnav-action-link"
+            href={p.ctaLabelHref || '#'}
+            target={p.ctaNewTab ? '_blank' : '_self'}
+            rel={p.ctaNewTab ? 'noreferrer' : undefined}
+            onClick={(e) => editing && e.preventDefault()}
+          >
+            <Ed path="ctaLabel" className="btn btn-primary btn-sm btn-pill" />
+            {p.ctaNewTab && <Ph_ name="ArrowSquareOut" size={11} />}
+            {editing && restricted(actionAccess('cta')) && <span className="pnav-access" title={accessTitle(actionAccess('cta'))}><Ph_ name="LockKey" size={11} /></span>}
+          </a>
+        )}
       </div>
     </div>
   )
@@ -620,14 +718,14 @@ function TryOut({ p }: { p: P }) {
             <span className="tryout-run"><Ph_ name="Play" size={11} weight="fill" /></span>
           </span>
         </div>
-        <Code text={p.requestCode} />
+        <Code text={p.requestCode} path="requestCode" />
       </div>
       <div className="tryout-block">
         <div className="tryout-bh">
           <span>Response</span>
           <span className="tryout-status"><i /> <Ed path="responseStatus" /> <Ph_ name="CaretDown" size={11} /></span>
         </div>
-        <Code text={p.responseCode} />
+        <Code text={p.responseCode} path="responseCode" />
       </div>
     </div>
   )
@@ -1242,7 +1340,7 @@ export function References({ p, variant }: { p: P; variant: string }) {
           </div>
           <div className="ref-code">
             <div className="ref-code-bar"><i /><i /><i /></div>
-            <Code text={p.specCode} numbered={false} className="dark" />
+            <Code text={p.specCode} path="specCode" numbered={false} className="dark" />
           </div>
           <Phone p={p} dark />
         </div>

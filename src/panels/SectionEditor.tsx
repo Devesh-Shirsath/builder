@@ -33,7 +33,11 @@ function SurfacePicker({ sectionId, current }: { sectionId: string; current: Sur
         <button
           key={s.id}
           className={`surf-swatch ${current === s.id ? 'on' : ''}`}
-          onClick={() => actions.setSurface(sectionId, s.id)}
+          onClick={() => {
+            actions.setSurface(sectionId, s.id)
+            actions.revealElement(sectionId)
+          }}
+          aria-pressed={current === s.id}
         >
           <span className="surf-chip" style={{ background: s.swatch(palette, darkPalette) }} />
           <span>{s.label}</span>
@@ -41,6 +45,24 @@ function SurfacePicker({ sectionId, current }: { sectionId: string; current: Sur
       ))}
     </div>
   )
+}
+
+/** Keep the panel relevant to the selected layout, including nested fields. */
+function fieldsForVariant(fields: Field[], variant: string): Field[] {
+  const visible: Field[] = []
+  for (const field of fields) {
+    if (field.variants && !field.variants.includes(variant)) continue
+    if (field.kind === 'toggle' || field.kind === 'group') {
+      visible.push({ ...field, children: field.children ? fieldsForVariant(field.children, variant) : field.children } as Field)
+      continue
+    }
+    if (field.kind === 'list') {
+      visible.push({ ...field, itemFields: fieldsForVariant(field.itemFields, variant) })
+      continue
+    }
+    visible.push(field)
+  }
+  return visible
 }
 
 /** Each divider in a schema starts a new titled panel section. */
@@ -57,7 +79,10 @@ function splitSections(fields: Field[]) {
 export function SectionEditor({ section, pinned }: { section: Section; pinned: boolean }) {
   const def = REGISTRY[section.type]
   const count = def.variants.length
-  const groups = useMemo(() => splitSections(def.fields), [def])
+  const groups = useMemo(
+    () => splitSections(fieldsForVariant(def.fields, section.variant)),
+    [def, section.variant],
+  )
 
   return (
     <>
@@ -65,7 +90,6 @@ export function SectionEditor({ section, pinned }: { section: Section; pinned: b
         <div className="sect">
           <div className="sect-label">
             Layout
-            <span className="sect-meta">{count} layouts</span>
           </div>
           <div className="variant-list">
             {def.variants.map((v) => {
@@ -74,7 +98,10 @@ export function SectionEditor({ section, pinned }: { section: Section; pinned: b
                 <button
                   key={v.id}
                   className={`variant ${on ? 'on' : ''}`}
-                  onClick={() => actions.setVariant(section.id, v.id)}
+                  onClick={() => {
+                    actions.setVariant(section.id, v.id)
+                    actions.revealElement(section.id)
+                  }}
                   aria-pressed={on}
                   title={v.label}
                 >
@@ -108,7 +135,7 @@ export function SectionEditor({ section, pinned }: { section: Section; pinned: b
 
       {!pinned && (
         <div className="sect">
-          <button className="btn-ui outline danger" style={{ width: '100%' }} onClick={() => actions.removeSection(section.id)}>
+          <button className="btn-ui danger delete-section-btn" onClick={() => actions.removeSection(section.id)}>
             <Icon name="trash" size={13} /> Delete section
           </button>
         </div>

@@ -69,23 +69,66 @@ function SectionShell({
   const editing = useStore((s) => !s.preview)
   const selected = useStore((s) => s.selection?.sectionId === section.id)
   const hovered = useStore((s) => s.hovered === section.id)
-  const revealAt = useStore((s) => (s.reveal?.id === section.id ? s.reveal.n : 0))
+  const reveal = useStore((s) => (s.reveal?.id === section.id ? s.reveal : null))
   const ref = useRef<HTMLElement>(null)
 
-  // Picking, adding or moving a section scrolls it to the top of the canvas
-  // and flashes its outline, so it's clear where it landed.
+  // Inspector clicks resolve to a rendered primitive by its prop path. Fields
+  // with no visual node (for example a button URL) fall back to a sibling that
+  // shares the same object path, then to the section itself.
   const [landed, setLanded] = useState(false)
   useEffect(() => {
-    if (!revealAt) return
-    ref.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
-    setLanded(true)
-    const t = window.setTimeout(() => setLanded(false), 900)
-    return () => window.clearTimeout(t)
-  }, [revealAt])
+    if (!reveal || !ref.current) return
+    let flashTimer: number | undefined
+    let targetTimer: number | undefined
+    const frame = window.requestAnimationFrame(() => {
+      const root = ref.current
+      if (!root) return
+
+      if (reveal.path) {
+        const candidates = Array.from(root.querySelectorAll<HTMLElement>('[data-editor-path]'))
+        const exact = candidates.find((node) => node.dataset.editorPath === reveal.path)
+        const parentPath = reveal.path.replace(/\.[^.]+$/, '')
+        // Some schemas keep a visible label and its nonvisual destination as
+        // flat siblings (`cta` + `ctaHref`, `link` + `linkUrl`). In those
+        // cases, reveal the visible control the destination belongs to.
+        const semanticPath = reveal.path.replace(/(?:Href|Link|Url)$/i, '')
+        const related = candidates.find((node) => {
+          const candidatePath = node.dataset.editorPath ?? ''
+          return (semanticPath && candidatePath === semanticPath)
+            || (parentPath && (candidatePath.startsWith(`${parentPath}.`) || candidatePath.startsWith(`${parentPath}[`)))
+        })
+        const target = exact ?? related
+        const scroller = root.closest<HTMLElement>('.frame')
+        if (target && scroller) {
+          const targetRect = target.getBoundingClientRect()
+          const scrollerRect = scroller.getBoundingClientRect()
+          const centered = scroller.scrollTop
+            + targetRect.top - scrollerRect.top
+            - (scroller.clientHeight - targetRect.height) / 2
+          scroller.scrollTo({ top: Math.max(0, centered), behavior: 'smooth' })
+          target.classList.add('reveal-target')
+          targetTimer = window.setTimeout(() => target.classList.remove('reveal-target'), 900)
+        } else {
+          root.scrollIntoView({ block: 'start', behavior: 'smooth' })
+        }
+        return
+      }
+
+      root.scrollIntoView({ block: 'start', behavior: 'smooth' })
+      setLanded(true)
+      flashTimer = window.setTimeout(() => setLanded(false), 900)
+    })
+    return () => {
+      window.cancelAnimationFrame(frame)
+      if (flashTimer) window.clearTimeout(flashTimer)
+      if (targetTimer) window.clearTimeout(targetTimer)
+    }
+  }, [reveal?.n])
 
   return (
     <section
       ref={ref}
+      data-reveal-path={reveal?.path}
       className={[
         'sec-shell',
         'surface',

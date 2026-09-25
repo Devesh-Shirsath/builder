@@ -108,6 +108,37 @@
 .pnav-links .navlink { color: var(--fg); opacity: .9; font-weight: 450; }
 .pnav-actions { display: flex; align-items: center; justify-content: flex-end; gap: 22px; }
 .pnav-login { color: var(--fg); font-weight: 500; }
+.pnav-item,
+.pnav-dropdown { position: relative; }
+.pnav-item-link,
+.pnav-action-link,
+.pnav-dropdown-trigger {
+  display: inline-flex; align-items: center; gap: 5px;
+  color: var(--fg); text-decoration: none;
+}
+.pnav-dropdown-trigger {
+  appearance: none; padding: 0; border: 0; background: transparent;
+  font: inherit; cursor: pointer;
+}
+.pnav-caret { transition: transform 160ms ease; }
+.pnav-dropdown.open .pnav-caret { transform: rotate(180deg); }
+.pnav-dropdown::after {
+  content: ''; position: absolute; z-index: 8; top: 100%; left: 0; right: 0; height: 17px;
+}
+.pnav-menu {
+  position: absolute; z-index: 9; top: calc(100% + 16px); left: 50%;
+  min-width: 218px; padding: 7px; transform: translateX(-50%);
+  border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface); box-shadow: 0 16px 38px rgb(15 23 42 / 14%);
+}
+.pnav-menu-item {
+  display: flex; align-items: center; gap: 7px; padding: 10px 11px;
+  border-radius: 8px; color: var(--fg); text-decoration: none; white-space: nowrap;
+}
+.pnav-menu-item:hover { background: color-mix(in oklab, var(--fg) 6%, transparent); }
+.pnav-menu-item .editable { flex: 1; }
+.pnav-menu-empty { display: block; padding: 10px 11px; color: var(--dim); font-size: .86rem; }
+.pnav-access { display: inline-flex; color: var(--dim); opacity: .75; }
 
 /* ---------------------------------------------------------------- hero */
 

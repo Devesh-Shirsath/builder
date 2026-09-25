@@ -171,6 +171,39 @@ input, textarea, select { font: inherit; }
   outline-offset: 1px;
 }
 
+/* Preview keeps the mode switch centred and reveals a compact viewport
+   picker beside Publish, matching the full-canvas preview hierarchy. */
+.preview-devices {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.preview-devices button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ui-fg-2);
+  cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s, box-shadow .12s;
+}
+.preview-devices button:hover { color: var(--ui-fg); background: var(--ui-hover); }
+.preview-devices button.on {
+  color: var(--ui-fg);
+  background: var(--ui-step-up);
+  border-color: var(--ui-stroke);
+  box-shadow: 0 1px 2px rgba(38, 38, 38, .06);
+}
+.preview-devices button:focus-visible {
+  outline: 2px solid var(--ui-brand);
+  outline-offset: 1px;
+}
+
 /* Segmented control — device switch in the topbar, and in-panel choices. */
 .seg {
   display: inline-flex; align-items: center; gap: 2px; padding: 3px;
@@ -274,6 +307,17 @@ input, textarea, select { font: inherit; }
 }
 .editing-on .pickable:hover::after { opacity: .55; }
 .editing-on .pickable.sel::after { opacity: 1; }
+
+/* Inspector-originated reveal, including nonvisual fields that resolve to a
+   related label or button. The selected outline remains the steady state. */
+.editing-on .reveal-target::after {
+  animation: reveal-target .9s var(--ui-ease);
+}
+@keyframes reveal-target {
+  0% { opacity: .25; box-shadow: inset 0 0 0 2px var(--ui-accent), 0 0 0 5px transparent; }
+  30%, 65% { opacity: 1; box-shadow: inset 0 0 0 2px var(--ui-accent), 0 0 0 5px color-mix(in oklab, var(--ui-accent) 18%, transparent); }
+  100% { opacity: 0; box-shadow: inset 0 0 0 2px var(--ui-accent), 0 0 0 8px transparent; }
+}
 
 .sec-shell { position: relative; }
 .editing-on .sec-shell::after {
@@ -537,13 +581,13 @@ button.drill-crumb:hover { color: var(--ui-fg); }
 }
 
 .add-btn {
-  width: 100%; height: 36px; border-radius: 10px;
-  border: 1px dashed var(--ui-stroke); background: transparent; color: var(--ui-fg-3);
+  width: 100%; height: 40px; border-radius: 7px;
+  border: 1px solid var(--ui-brand-tint); background: var(--ui-brand-tint); color: var(--ui-brand);
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  font-size: 13px; font-weight: 500; cursor: pointer;
+  font-size: 13px; font-weight: 600; cursor: pointer;
   transition: background .12s, color .12s, border-color .12s;
 }
-.add-btn:hover { border-color: var(--ui-stroke-hover); color: var(--ui-fg); background: var(--ui-step-up); }
+.add-btn:hover { border-color: var(--ui-brand-tint-hover); color: var(--ui-brand); background: var(--ui-brand-tint-hover); }
 .panel-list > .panel-foot {
   flex: none; padding: 12px; border-top: 1px solid var(--ui-stroke);
   background: var(--ui-ground);
@@ -655,21 +699,21 @@ button.drill-crumb:hover { color: var(--ui-fg); }
    Sections are split by a full-width hairline. Inside one, fields sit 16px
    apart and anything that belongs together (a switch and the inputs it
    controls, a button's label and link) shares a card. */
-.sect { padding: 20px 16px 24px; display: flex; flex-direction: column; gap: 16px; }
+.sect { padding: 24px 16px; display: flex; flex-direction: column; gap: 18px; }
 .sect + .sect { border-top: 1px solid var(--ui-stroke); }
 .sect-label {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   margin-bottom: -2px;
-  font-size: 13px; line-height: 20px; font-weight: 600; color: var(--ui-fg);
+  font-size: 14px; line-height: 22px; font-weight: 650; color: var(--ui-fg);
 }
 .sect-meta { font-size: 11px; line-height: 16px; font-weight: 400; color: var(--ui-fg-3); }
 /* A heading inside a list item's own fields — rare, one step below a title. */
 .field-subhead { font-size: 12px; line-height: 18px; font-weight: 600; color: var(--ui-fg); margin-top: 4px; }
 
-.field-ui { display: flex; flex-direction: column; gap: 6px; }
+.field-ui { display: flex; flex-direction: column; gap: 8px; }
 .field-ui > label,
 .field-ui > .row-between > label {
-  font-size: 12px; line-height: 18px; font-weight: 500; color: var(--ui-fg-2);
+  font-size: 13px; line-height: 20px; font-weight: 500; color: var(--ui-fg-2);
 }
 
 /* Theme and typography are one flat list: a label and its control, evenly
@@ -677,29 +721,36 @@ button.drill-crumb:hover { color: var(--ui-fg); }
 .styles-pane .sect { padding: 16px; gap: 18px; }
 .styles-pane .sect + .sect { border-top: 0; padding-top: 0; }
 
-/* A switch that governs other fields heads a card holding them. */
-.fgroup { border: 1px solid var(--ui-stroke); border-radius: 10px; background: var(--ui-step-up); }
+/* Related fields read as one quiet panel section rather than a nested card. */
+.fgroup { border: 0; border-radius: 0; background: transparent; }
 .fgroup-head {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  min-height: 40px; padding: 8px 12px;
+  min-height: 24px; padding: 0;
 }
-.fgroup-title { font-size: 12px; line-height: 18px; font-weight: 600; color: var(--ui-fg); }
+.fgroup-title { font-size: 13px; line-height: 20px; font-weight: 600; color: var(--ui-fg); }
 .fgroup.off .fgroup-title { font-weight: 500; color: var(--ui-fg-3); }
 .fgroup-body {
   display: flex; flex-direction: column; gap: 12px;
-  padding: 12px; border-top: 1px solid var(--ui-stroke);
+  padding: 12px 0 0; border-top: 0;
 }
-.fgroup-body :is(.control, .input-area, .img-row, .list-item) { background: var(--ui-ground); }
+.fgroup + .fgroup { padding-top: 16px; border-top: 1px dashed var(--ui-stroke); }
+/* Eyebrow is one optional content block. Separate the main heading fields so
+   Label clearly belongs to the eyebrow toggle in every section schema. */
+.fgroup[data-path="showEyebrow"] + .field-ui {
+  margin-top: 2px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--ui-stroke);
+}
 /* A lone switch: label left, switch right, on one line. */
 .ftoggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 24px; }
 .ftoggle-label { font-size: 12px; line-height: 18px; font-weight: 500; color: var(--ui-fg-2); }
 .field-row { display: flex; align-items: center; gap: 10px; }
 
 .control {
-  width: 100%; min-height: 32px;
+  width: 100%; min-height: 40px;
   background: var(--ui-l2); color: var(--ui-fg);
   border: 1px solid var(--ui-stroke); border-radius: 8px;
-  padding: 6px 12px; font-size: 12px; line-height: 18px;
+  padding: 9px 12px; font-size: 13px; line-height: 20px;
   outline: none; transition: border-color .12s, box-shadow .12s, background .12s;
 }
 .control::placeholder { color: var(--ui-fg-4); }
@@ -711,13 +762,24 @@ select.control {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 256 256'%3E%3Cpath fill='none' stroke='%23595959' stroke-linecap='round' stroke-linejoin='round' stroke-width='20' d='m208 96-80 80-80-80'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 10px center;
 }
-.field-ui.flash .control { border-color: var(--ui-brand); box-shadow: 0 0 0 3px rgba(2, 101, 220, .18); }
+/* Canvas selection highlights only the editable control, never its label or
+   the field/group container around it. */
+.field-ui.flash .control,
+.field-ui.flash .input-area,
+.field-ui.flash .img-row {
+  border-color: var(--ui-brand);
+  box-shadow: 0 0 0 3px rgba(2, 101, 220, .18);
+}
+.field-ui.flash .switch {
+  outline: 2px solid var(--ui-brand);
+  outline-offset: 2px;
+}
 
 /* An input with a leading icon — brand colour, font triggers. */
 .input-area {
   flex: 1; min-width: 0; width: 100%;
   display: flex; align-items: center; gap: 8px;
-  height: 32px; padding: 0 12px;
+  height: 40px; padding: 0 12px;
   background: var(--ui-l2); border: 1px solid var(--ui-stroke); border-radius: 8px;
   color: var(--ui-fg-3); text-align: left;
   transition: border-color .12s, box-shadow .12s, background .12s;
@@ -728,7 +790,7 @@ select.control {
 .input-area input {
   flex: 1; min-width: 0; height: 100%; padding: 0;
   border: 0; outline: none; background: transparent;
-  color: var(--ui-fg); font-size: 12px;
+  color: var(--ui-fg); font-size: 13px;
 }
 
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -757,14 +819,14 @@ select.control {
 /* variant picker — live, themed renders of each layout */
 .variant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .variant-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.variant-list .variant { position: relative; display: flex; flex-direction: column; width: 100%; padding: 4px; }
+.variant-list .variant { position: relative; display: flex; flex-direction: column; width: 100%; padding: 5px; }
 .variant-list .variant-name {
   margin-top: 6px; padding: 0 4px 3px;
   font-size: 11.5px; line-height: 15px; font-weight: 500; color: var(--ui-fg-3);
 }
 .variant-list .variant.on .variant-name { color: var(--ui-fg); }
 .variant-check {
-  position: absolute; top: 8px; right: 8px;
+  position: absolute; right: 9px; bottom: 10px;
   color: var(--ui-brand); background: #fff; border-radius: 99px;
 }
 
@@ -786,11 +848,11 @@ select.control {
 .type-card .sp { border-radius: 0; box-shadow: none; }
 .type-card-count { margin-left: auto; font-size: 11px; color: var(--text-subtle); white-space: nowrap; }
 .variant {
-  border: 1px solid var(--ui-stroke); border-radius: 8px; background: var(--ui-step-up);
+  border: 1px solid var(--ui-stroke); border-radius: 12px; background: var(--ui-step-up);
   padding: 6px; cursor: pointer; text-align: left; transition: border-color .12s;
 }
 .variant:hover { border-color: var(--ui-stroke-hover); }
-.variant.on { border-color: var(--ui-stroke-strong); }
+.variant.on { border: 2px solid var(--ui-brand); padding: 5px; }
 .variant-name { font-size: 12px; line-height: 18px; color: var(--ui-fg-3); margin-top: 6px; padding: 0 2px; }
 .variant.on .variant-name { color: var(--ui-fg); font-weight: 500; }
 
@@ -813,28 +875,28 @@ select.control {
 /* surface picker */
 .surface-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .surf-swatch {
-  border: 1px solid var(--ui-stroke); border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--ui-stroke); border-radius: 9px; cursor: pointer;
   padding: 5px; background: var(--ui-step-up); display: flex; flex-direction: column; gap: 5px;
   align-items: center; transition: border-color .12s;
 }
 .surf-swatch:hover { border-color: var(--ui-stroke-hover); }
-.surf-swatch.on { border-color: var(--ui-stroke-strong); }
+.surf-swatch.on { border: 2px solid var(--ui-brand); padding: 4px; }
 .surf-chip { width: 100%; height: 22px; border-radius: 4px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
 .surf-swatch span { font-size: 11px; color: var(--ui-fg-3); }
 .surf-swatch.on span { color: var(--ui-fg); font-weight: 500; }
 
 /* list editor */
 .list-item {
-  border: 1px solid var(--ui-stroke); border-radius: 8px; background: var(--ui-step-up);
+  border: 1px solid var(--ui-stroke); border-radius: 12px; background: var(--ui-step-up);
   overflow: hidden;
 }
-.list-item + .list-item { margin-top: 6px; }
+.list-item + .list-item { margin-top: 8px; }
 .list-head {
-  display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 8px 8px 8px 12px; cursor: pointer;
   color: var(--ui-fg);
 }
 .list-head:hover { background: var(--ui-ground); }
-.list-head-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; font-weight: 500; }
+.list-head-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; font-weight: 550; }
 .list { display: flex; flex-direction: column; }
 .list-handle {
   display: grid; place-items: center; width: 16px; height: 24px; margin-left: -4px; flex: none;
@@ -860,8 +922,8 @@ select.control {
 
 /* image field — a compact upload row */
 .img-row {
-  display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 6px;
-  border: 1px solid var(--ui-stroke); border-radius: 8px; background: var(--ui-step-up);
+  display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px;
+  border: 1px solid var(--ui-stroke); border-radius: 10px; background: var(--ui-step-up);
 }
 .img-thumb {
   width: 36px; height: 36px; flex: none; border-radius: 6px;
@@ -873,6 +935,12 @@ select.control {
 .img-meta span { font-size: 11px; line-height: 15px; color: var(--ui-fg-3); }
 .img-row .btn-ui { height: 28px; padding: 0 10px; }
 .img-row .btn-ui.icon { width: 28px; padding: 0; }
+
+.delete-section-btn {
+  width: 100%; height: 40px;
+  background: var(--ui-danger-tint); border-color: var(--ui-danger-tint);
+}
+.delete-section-btn:hover { background: #f9ddd3; border-color: #f9ddd3; }
 
 /* icon picker */
 .icon-field { display: flex; flex-direction: column; gap: 8px; }
@@ -1214,6 +1282,24 @@ select.control {
 
 .start-overlay { z-index: 120; }
 .start-modal { width: min(860px, 100%); }
+.start-modal.is-wide {
+  width: min(1180px, 100%); height: min(90vh, 860px); max-height: min(90vh, 860px);
+}
+.start-modal.is-wide .modal-body { flex: 1; min-height: 0; }
+.start-approach-switch {
+  display: flex; align-items: center; padding: 3px;
+  border: 1px solid var(--ui-stroke); border-radius: 9px; background: var(--ui-ground);
+}
+.start-approach-switch button {
+  height: 30px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent;
+  color: var(--ui-fg-3); display: inline-flex; align-items: center; gap: 6px;
+  font: inherit; font-size: 12px; font-weight: 550; cursor: pointer;
+}
+.start-approach-switch button:hover { color: var(--ui-fg); }
+.start-approach-switch button.on {
+  background: var(--ui-step-up); color: var(--ui-fg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .08), inset 0 0 0 1px var(--ui-stroke);
+}
 .start-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
 .start-card {
   display: flex; flex-direction: column; overflow: hidden; cursor: pointer; text-align: left;
@@ -1241,6 +1327,82 @@ select.control {
   background: var(--ui-step-up); border: 1px dashed var(--ui-stroke-hover); color: var(--ui-fg-3);
 }
 .start-go { height: 38px; padding: 0 16px; font-size: 13px; }
+
+/* Approach 1 — a gallery that opens the selected template as a full page. */
+.start-full-preview {
+  display: flex; flex-direction: column; gap: 14px; overflow: hidden; padding: 14px 18px 18px;
+}
+.start-detail-bar { display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 18px; }
+.start-detail-bar > .btn-ui { margin-top: 2px; }
+.start-preview-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;
+  padding: 0 2px;
+}
+.start-preview-title { font-size: 16px; line-height: 22px; font-weight: 650; color: var(--ui-fg); }
+.start-preview-tagline { margin-top: 1px; font-size: 12px; font-weight: 550; color: var(--ui-fg-2); }
+.start-preview-head p {
+  margin: 5px 0 0; max-width: 650px; color: var(--ui-fg-3); font-size: 11.5px; line-height: 17px;
+}
+.start-preview-meta {
+  display: flex; align-items: center; gap: 7px; white-space: nowrap;
+  color: var(--ui-fg-3); font-size: 11px; padding-top: 4px;
+}
+.start-preview-meta > span { width: 10px; height: 10px; border-radius: 99px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.1); }
+.template-preview-scroll {
+  flex: 1; min-height: 0; overflow: auto; padding: 18px;
+  border: 1px solid var(--ui-stroke); border-radius: 12px; background: var(--ui-ground);
+}
+.template-page-preview {
+  position: relative; width: 100%; overflow: hidden;
+  background: var(--ui-step-up); border-radius: 8px;
+  box-shadow: 0 12px 36px -20px rgba(0, 0, 0, .35), 0 0 0 1px var(--ui-stroke);
+}
+.template-page-site {
+  position: absolute; inset: 0 auto auto 0; min-height: 0 !important;
+  transform-origin: top left; pointer-events: none;
+}
+
+/* Approach 2 — compact selector on the left, complete page preview on the right. */
+.start-split { display: grid; grid-template-columns: 260px minmax(0, 1fr); padding: 0; overflow: hidden; }
+.start-template-list {
+  min-height: 0; overflow-y: auto; padding: 12px;
+  border-right: 1px solid var(--ui-stroke); background: var(--ui-ground);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.start-template-row {
+  width: 100%; display: grid; grid-template-columns: 78px minmax(0, 1fr) auto;
+  align-items: center; gap: 10px; padding: 6px;
+  border: 1px solid transparent; border-radius: 10px; background: transparent;
+  color: var(--ui-fg); text-align: left; font: inherit; cursor: pointer;
+}
+.start-template-row:hover { background: var(--ui-l2); border-color: var(--ui-stroke); }
+.start-template-row.on { background: var(--ui-brand-tint); border-color: var(--ui-brand); }
+.start-template-row > span:nth-child(2) { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.start-template-row b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; line-height: 17px; }
+.start-template-row small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ui-fg-3); font-size: 10px; }
+.start-template-row > svg { color: var(--ui-brand); }
+.start-template-thumb { display: block; overflow: hidden; border: 1px solid var(--ui-stroke); border-radius: 6px; background: var(--ui-step-up); }
+.start-template-blank {
+  height: 52px; display: grid; place-items: center; border: 1px dashed var(--ui-stroke-hover);
+  border-radius: 6px; color: var(--ui-fg-3); background: var(--ui-l2);
+}
+.start-split-main { min-width: 0; min-height: 0; padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+.start-blank-preview {
+  flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  border: 1px dashed var(--ui-stroke-hover); border-radius: 12px; background: var(--ui-ground); color: var(--ui-fg-3);
+}
+.start-blank-preview b { color: var(--ui-fg); font-size: 14px; }
+.start-blank-preview > span:last-child { max-width: 340px; text-align: center; font-size: 12px; line-height: 18px; }
+
+@media (max-width: 820px) {
+  .start-modal.is-wide { height: min(92vh, 860px); }
+  .start-approach-switch button { padding: 0 8px; }
+  .start-approach-switch button svg { display: none; }
+  .start-split { grid-template-columns: 190px minmax(0, 1fr); }
+  .start-template-row { grid-template-columns: 1fr auto; }
+  .start-template-thumb, .start-template-blank { display: none; }
+  .start-preview-meta { display: none; }
+}
 
 /* ---------------------------------------------------------- the library */
 

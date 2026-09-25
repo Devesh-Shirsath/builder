@@ -141,9 +141,13 @@ interface State {
   /** Which tab of the left panel is showing: the current page, or the global
       theme & typography settings that apply to every page. */
   sidebarTab: 'page' | 'styles'
-  /** A request to scroll the canvas to a section. `n` changes on every request,
-      so picking the same row twice still scrolls back to it. */
-  reveal: { id: string; n: number } | null
+  /** A request to scroll the canvas to a section or one editable element in it.
+      `n` changes on every request, so choosing the same control twice still
+      scrolls back to it. */
+  reveal: { id: string; path?: string; n: number } | null
+  /** A canvas-originated request to expose the matching inspector control.
+      Kept separate from `reveal` so clicking the canvas never moves it. */
+  inspect: { id: string; path: string; n: number } | null
   hovered: string | null
   device: 'desktop' | 'tablet' | 'mobile'
   preview: boolean
@@ -167,6 +171,7 @@ let state: State = {
   selection: null,
   sidebarTab: 'page',
   reveal: null,
+  inspect: null,
   hovered: null,
   device: 'desktop',
   preview: false,
@@ -335,7 +340,22 @@ export const actions = {
   select(sel: Selection | null) {
     // Picking something on the canvas always brings its fields into view,
     // even from the theme & typography tab.
-    patch(sel ? { selection: sel, panel: 'root', sidebarTab: 'page' } : { selection: null, panel: 'root' })
+    patch(sel ? {
+      selection: sel,
+      panel: 'root',
+      sidebarTab: 'page',
+      ...(sel.path ? { inspect: { id: sel.sectionId, path: sel.path, n: Date.now() } } : {}),
+    } : { selection: null, panel: 'root' })
+  },
+  /** Select a control from the inspector and bring its rendered counterpart
+      into view. Unlike `select`, every call creates a fresh reveal request. */
+  revealElement(sectionId: string, path?: string, targetPath = path) {
+    patch({
+      selection: { sectionId, ...(path ? { path } : {}) },
+      panel: 'root',
+      sidebarTab: 'page',
+      reveal: { id: sectionId, ...(targetPath ? { path: targetPath } : {}), n: Date.now() },
+    })
   },
   setSidebarTab(sidebarTab: State['sidebarTab']) {
     patch({ sidebarTab })
@@ -368,6 +388,7 @@ export const actions = {
       sidebarTab: 'page',
       selection: null,
       reveal: null,
+      inspect: null,
       preview: false,
     }
     emit()
@@ -391,6 +412,7 @@ export const actions = {
       sidebarTab: 'page',
       selection: null,
       reveal: null,
+      inspect: null,
     }
     persist(doc)
     emit()
@@ -408,7 +430,7 @@ export const actions = {
   /** Select a section from the layer list and bring it into view on the canvas.
       Canvas clicks use `select` instead — the element is already on screen. */
   revealSection(id: string) {
-    patch({ selection: { sectionId: id }, panel: 'root', sidebarTab: 'page', reveal: { id, n: Date.now() } })
+    actions.revealElement(id)
   },
   openTheme() {
     patch({ panel: 'theme', selection: null })

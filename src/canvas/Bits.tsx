@@ -117,6 +117,7 @@ export function Ed({ path, as: Tag = 'span', className = '', multiline = false, 
   return (
     <RenderTag
       ref={ref as any}
+      data-editor-path={path}
       className={`editable ${className} ${selected ? 'sel' : ''}`}
       style={{ whiteSpace: multiline ? 'pre-wrap' : undefined, ...style }}
       contentEditable={live}
@@ -189,6 +190,7 @@ export function Pick({
   return (
     <Tag
       ref={ref as any}
+      data-editor-path={path}
       className={`pickable ${className} ${selected ? 'sel' : ''}`}
       style={style}
       onClick={(e: React.MouseEvent) => {

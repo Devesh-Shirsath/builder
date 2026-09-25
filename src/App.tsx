@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { actions, useStore } from './store'
-import type { Doc } from './types'
 import { paletteTokens } from './theme/palette'
 import { DEFAULT_FONT, fontStack, useFonts } from './theme/fonts'
 import { Canvas } from './canvas/Canvas'
@@ -18,82 +17,6 @@ const DEVICES = [
   { id: 'tablet', label: 'Tablet' },
   { id: 'mobile', label: 'Mobile' },
 ] as const
-
-/** Exit, import, export and reset — used rarely, so they live behind one button. */
-function MoreMenu({ onToast }: { onToast: (msg: string) => void }) {
-  const doc = useStore((s) => s.doc)
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
-  const close = useCallback(() => setOpen(false), [])
-  useDismiss(open, ref, close)
-
-  const exportJson = () => {
-    const blob = new Blob([JSON.stringify(doc, null, 2)], { type: 'application/json' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = 'portal.json'
-    a.click()
-    URL.revokeObjectURL(a.href)
-    onToast('Exported portal.json')
-  }
-
-  const importJson = (file?: File) => {
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      try {
-        const next = JSON.parse(String(reader.result)) as Doc
-        if (!next.theme || !next.nav || !next.pages || !Array.isArray(next.pageOrder)) {
-          throw new Error('bad shape')
-        }
-        actions.replaceDoc(next)
-        onToast('Imported')
-      } catch {
-        onToast("That file doesn't look like a saved portal")
-      }
-    }
-    reader.readAsText(file)
-  }
-
-  const item = (icon: string, label: string, run: () => void, danger = false) => (
-    <button
-      className={`menu-item ${danger ? 'danger' : ''}`}
-      onClick={() => {
-        setOpen(false)
-        run()
-      }}
-    >
-      <Ph_ name={icon} size={16} />
-      {label}
-    </button>
-  )
-
-  return (
-    <div className="menu-wrap" ref={ref}>
-      <button className={`btn-ui icon ${open ? 'active' : ''}`} title="More" onClick={() => setOpen((v) => !v)}>
-        <Ph_ name="DotsThree" size={18} weight="bold" />
-      </button>
-      {open && (
-        <div className="menu">
-          {item('SignOut', 'Exit builder', () => actions.openPortal())}
-          <span className="menu-sep" />
-          {item('UploadSimple', 'Import JSON', () => fileRef.current?.click())}
-          {item('DownloadSimple', 'Export JSON', exportJson)}
-          <span className="menu-sep" />
-          {item('Trash', 'Reset every page', () => {
-            if (confirm('Reset every page back to the starter content?')) {
-              actions.resetAll()
-              onToast('Reset')
-            }
-          }, true)}
-        </div>
-      )}
-      <input ref={fileRef} type="file" accept="application/json" hidden
-        onChange={(e) => { importJson(e.target.files?.[0] ?? undefined); e.target.value = '' }} />
-    </div>
-  )
-}
 
 const VERSIONS: { id: BuilderVersion; name: string; tagline: string; desc: string }[] = [
   {
@@ -197,34 +120,45 @@ function BuilderBar({ onToast }: { onToast: (msg: string) => void }) {
         </button>
       </div>
 
-      <div className="seg" role="group" aria-label="Device">
-        {DEVICES.map((d) => (
-          <button key={d.id} className={device === d.id ? 'on' : ''} onClick={() => actions.setDevice(d.id)}>
-            {d.label}
-          </button>
-        ))}
+      <div className="mode-switch" role="group" aria-label="Builder mode">
+        <button
+          className={!preview ? 'on' : ''}
+          aria-pressed={!preview}
+          onClick={() => actions.setPreview(false)}
+        >
+          <Ph_ name="NotePencil" size={16} />
+          Edit
+        </button>
+        <button
+          className={preview ? 'on' : ''}
+          aria-pressed={preview}
+          onClick={() => actions.setPreview(true)}
+        >
+          <Ph_ name="Eye" size={17} />
+          Preview
+        </button>
       </div>
 
       <div className="topbar-side end">
-        <MoreMenu onToast={onToast} />
-        <div className="mode-switch" role="group" aria-label="Customise mode">
-          <button
-            className={!preview ? 'on' : ''}
-            aria-pressed={!preview}
-            onClick={() => actions.setPreview(false)}
-          >
-            <Ph_ name="NotePencil" size={16} />
-            Edit
-          </button>
-          <button
-            className={preview ? 'on' : ''}
-            aria-pressed={preview}
-            onClick={() => actions.setPreview(true)}
-          >
-            <Ph_ name="Eye" size={17} />
-            Preview
-          </button>
-        </div>
+        {preview && (
+          <div className="preview-devices" role="group" aria-label="Preview device">
+            {DEVICES.map((d) => {
+              const icon = d.id === 'desktop' ? 'Desktop' : d.id === 'tablet' ? 'DeviceTablet' : 'DeviceMobile'
+              return (
+                <button
+                  key={d.id}
+                  className={device === d.id ? 'on' : ''}
+                  aria-label={`${d.label} preview`}
+                  aria-pressed={device === d.id}
+                  title={d.label}
+                  onClick={() => actions.setDevice(d.id)}
+                >
+                  <Ph_ name={icon} size={16} />
+                </button>
+              )
+            })}
+          </div>
+        )}
         <button className="btn-ui primary" onClick={() => onToast('Published')}>
           <Ph_ name="RocketLaunch" size={16} /> Publish Changes
         </button>

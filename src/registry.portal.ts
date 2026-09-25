@@ -9,7 +9,7 @@ const link = (label: string) => ({ label, href: '#' })
 
 /* The eyebrow's switch heads the field it governs. */
 const eyebrow: Field[] = [
-  { kind: 'toggle', path: 'showEyebrow', label: 'Eyebrow tag', children: [{ kind: 'text', path: 'eyebrow', label: 'Tag text' }] },
+  { kind: 'toggle', path: 'showEyebrow', label: 'Eyebrow tag', children: [{ kind: 'text', path: 'eyebrow', label: 'Label' }] },
 ]
 const heading: Field[] = [
   ...eyebrow,
@@ -59,6 +59,66 @@ const recipes = () => [
   { title: 'Bulk payout automation', body: 'Automate vendor, employee and partner payouts at scale.', cta: 'Explore recipe' },
 ]
 
+const visibilityOptions = [
+  { value: 'everyone', label: 'Everyone' },
+  { value: 'logged-in', label: 'Logged-in users only' },
+  { value: 'logged-out', label: 'Logged-out users only' },
+  { value: 'role', label: 'Specific permission role' },
+  { value: 'group', label: 'Specific user group' },
+]
+
+const roleOptions = [
+  { value: 'any', label: 'Any role' },
+  { value: 'admin', label: 'Administrator' },
+  { value: 'developer', label: 'Developer' },
+  { value: 'partner', label: 'Partner' },
+  { value: 'viewer', label: 'Viewer' },
+]
+
+const groupOptions = [
+  { value: 'any', label: 'Any group' },
+  { value: 'internal', label: 'Internal team' },
+  { value: 'partners', label: 'Partners' },
+  { value: 'customers', label: 'Customers' },
+  { value: 'beta', label: 'Beta testers' },
+]
+
+const accessFields = (prefix = ''): Field[] => {
+  const key = (name: string) => prefix ? `${prefix}${name[0].toUpperCase()}${name.slice(1)}` : name
+  return [
+    { kind: 'toggle', path: key('newTab'), label: 'Open in new tab' },
+    { kind: 'select', path: key('visibility'), label: 'Visible to', options: visibilityOptions },
+    { kind: 'select', path: key('role'), label: 'Permission role', options: roleOptions },
+    { kind: 'select', path: key('group'), label: 'User group', options: groupOptions },
+  ]
+}
+
+const dropdownItemFields: Field[] = [
+  { kind: 'text', path: 'label', label: 'Label' },
+  { kind: 'text', path: 'href', label: 'Link', placeholder: 'https:// or /path' },
+  ...accessFields(),
+]
+
+const navItem = (label = 'New link') => ({
+  label,
+  href: '#',
+  dropdown: false,
+  newTab: false,
+  visibility: 'everyone',
+  role: 'any',
+  group: 'any',
+  children: [],
+})
+
+const navDropdownItem = () => ({
+  label: 'Dropdown item',
+  href: '#',
+  newTab: false,
+  visibility: 'everyone',
+  role: 'any',
+  group: 'any',
+})
+
 export const PORTAL_REGISTRY: Partial<Record<SectionType, SectionDef>> = {
   /* ------------------------------------------------------------------ nav */
   nav: {
@@ -76,24 +136,60 @@ export const PORTAL_REGISTRY: Partial<Record<SectionType, SectionDef>> = {
         kind: 'list', path: 'links', label: 'Nav links', itemTitle: 'label', addLabel: 'Add link', max: 7,
         itemFields: [
           { kind: 'text', path: 'label', label: 'Label' },
-          { kind: 'text', path: 'href', label: 'Link' },
+          { kind: 'text', path: 'href', label: 'Link', placeholder: 'https:// or /path' },
+          ...accessFields(),
+          {
+            kind: 'toggle', path: 'dropdown', label: 'Dropdown menu',
+            children: [{
+              kind: 'list', path: 'children', label: 'Dropdown items', itemTitle: 'label',
+              addLabel: 'Add dropdown item', max: 8, itemFields: dropdownItemFields,
+              template: navDropdownItem,
+            }],
+          },
         ],
-        template: () => link('New link'),
+        template: navItem,
       },
       { kind: 'divider', label: 'Actions' },
-      optionalButton('showSecondary', 'secondaryLabel', 'Login link'),
-      optionalButton('showCta', 'ctaLabel', 'Sign-up button'),
+      {
+        kind: 'toggle', path: 'showSecondary', label: 'Login link', children: [
+          { kind: 'text', path: 'secondaryLabel', label: 'Label' },
+          { kind: 'text', path: 'secondaryLabelHref', label: 'Link', placeholder: 'https:// or /path' },
+          ...accessFields('secondary'),
+        ],
+      },
+      {
+        kind: 'toggle', path: 'showCta', label: 'Sign-up button', children: [
+          { kind: 'text', path: 'ctaLabel', label: 'Label' },
+          { kind: 'text', path: 'ctaLabelHref', label: 'Link', placeholder: 'https:// or /path' },
+          ...accessFields('cta'),
+        ],
+      },
     ],
     defaults: () => ({
       logoText: 'Northwind',
       logoIcon: 'Sparkle',
-      links: [link('API Products'), link('Solutions'), link('Get Started'), link('References'), link('About Us'), link('Book a Meeting')],
+      links: [
+        { ...navItem('API Products'), dropdown: true, children: [
+          { ...navDropdownItem(), label: 'Payments APIs', href: '/apis/payments' },
+          { ...navDropdownItem(), label: 'Accounts APIs', href: '/apis/accounts' },
+          { ...navDropdownItem(), label: 'Lending APIs', href: '/apis/lending', visibility: 'logged-in' },
+        ] },
+        navItem('Solutions'), navItem('Get Started'), navItem('References'), navItem('About Us'), navItem('Book a Meeting'),
+      ],
       showSecondary: true,
       secondaryLabel: 'Login',
       secondaryLabelHref: '/login',
+      secondaryNewTab: false,
+      secondaryVisibility: 'logged-out',
+      secondaryRole: 'any',
+      secondaryGroup: 'any',
       showCta: true,
       ctaLabel: 'Sign Up',
       ctaLabelHref: '/signup',
+      ctaNewTab: false,
+      ctaVisibility: 'logged-out',
+      ctaRole: 'any',
+      ctaGroup: 'any',
     }),
   },
 
@@ -157,13 +253,16 @@ export const PORTAL_REGISTRY: Partial<Record<SectionType, SectionDef>> = {
       { id: 'table', label: 'Cards with award table', surface: 'page' },
     ],
     fields: [
-      ...heading,
-      { kind: 'image', path: 'image', label: 'Image (spotlight)' },
-      logoList('logos', 'Publication logos'),
-      { kind: 'divider', label: 'Award list' },
-      { kind: 'text', path: 'listTitle', label: 'List title' },
+      { ...eyebrow[0], variants: ['cards', 'table'] },
+      { kind: 'text', path: 'title', label: 'Title', multiline: true },
+      { kind: 'text', path: 'sub', label: 'Description', multiline: true },
+      { kind: 'image', path: 'image', label: 'Image (spotlight)', variants: ['spotlight'] },
+      { ...logoList('logos', 'Publication logos'), variants: ['spotlight', 'table'] },
+      { kind: 'divider', label: 'Award list', variants: ['spotlight', 'table'] },
+      { kind: 'text', path: 'listTitle', label: 'List title', variants: ['spotlight', 'table'] },
       {
         kind: 'list', path: 'awards', label: 'Awards', itemTitle: 'name', addLabel: 'Add award',
+        variants: ['spotlight', 'table'],
         itemFields: [
           { kind: 'text', path: 'year', label: 'Award year' },
           { kind: 'text', path: 'name', label: 'Award name' },
@@ -172,9 +271,10 @@ export const PORTAL_REGISTRY: Partial<Record<SectionType, SectionDef>> = {
         ],
         template: () => ({ year: '2026', name: 'New award', org: 'Awarding body', link: '#' }),
       },
-      { kind: 'divider', label: 'Highlights' },
+      { kind: 'divider', label: 'Highlights', variants: ['cards', 'table'] },
       {
         kind: 'list', path: 'highlights', label: 'Highlight cards', itemTitle: 'title', addLabel: 'Add highlight', max: 4,
+        variants: ['cards', 'table'],
         itemFields: [
           { kind: 'text', path: 'category', label: 'Category' },
           { kind: 'text', path: 'title', label: 'Title' },
@@ -434,6 +534,7 @@ export const PORTAL_REGISTRY: Partial<Record<SectionType, SectionDef>> = {
       ...heading,
       {
         kind: 'list', path: 'items', label: 'Reasons', itemTitle: 'title', addLabel: 'Add reason', max: 4,
+        variants: ['illustrated', 'bento'],
         itemFields: [
           { kind: 'icon', path: 'icon', label: 'Icon' },
           { kind: 'text', path: 'title', label: 'Title' },
@@ -441,18 +542,20 @@ export const PORTAL_REGISTRY: Partial<Record<SectionType, SectionDef>> = {
         ],
         template: () => ({ icon: 'Wrench', title: 'New reason', body: 'Describe the reason.' }),
       },
-      { kind: 'divider', label: 'Cards around artwork' },
-      { kind: 'image', path: 'image', label: 'Illustration' },
-      button('cta', 'Button'),
-      { kind: 'divider', label: 'Bento grid' },
+      { kind: 'divider', label: 'Cards around artwork', variants: ['illustrated'] },
+      { kind: 'image', path: 'image', label: 'Illustration', variants: ['illustrated'] },
+      { ...button('cta', 'Button'), variants: ['illustrated'] },
+      { kind: 'divider', label: 'Bento grid', variants: ['bento'] },
       {
         kind: 'list', path: 'statements', label: 'Statements', itemTitle: 'text', addLabel: 'Add statement', max: 5,
+        variants: ['bento'],
         itemFields: [{ kind: 'text', path: 'text', label: 'Statement', multiline: true }],
         template: () => ({ text: 'A short supporting statement.' }),
       },
-      { kind: 'divider', label: 'Use cases with stats' },
+      { kind: 'divider', label: 'Use cases with stats', variants: ['usecases'] },
       {
         kind: 'list', path: 'industries', label: 'Industries', itemTitle: 'name', addLabel: 'Add industry', max: 5,
+        variants: ['usecases'],
         itemFields: [
           { kind: 'icon', path: 'icon', label: 'Icon' },
           { kind: 'text', path: 'name', label: 'Name' },
@@ -460,9 +563,10 @@ export const PORTAL_REGISTRY: Partial<Record<SectionType, SectionDef>> = {
         ],
         template: () => ({ icon: 'Buildings', name: 'Industry', tagline: 'Tagline' }),
       },
-      { kind: 'text', path: 'featuredLabel', label: 'Featured label' },
+      { kind: 'text', path: 'featuredLabel', label: 'Featured label', variants: ['usecases'] },
       {
         kind: 'list', path: 'recipes', label: 'Recipes', itemTitle: 'title', addLabel: 'Add recipe', max: 4,
+        variants: ['usecases'],
         itemFields: [
           { kind: 'text', path: 'title', label: 'Title' },
           { kind: 'text', path: 'body', label: 'Description', multiline: true },
@@ -471,11 +575,12 @@ export const PORTAL_REGISTRY: Partial<Record<SectionType, SectionDef>> = {
         ],
         template: () => ({ title: 'New recipe', body: 'Describe the recipe.', cta: 'Explore recipe' }),
       },
-      { kind: 'image', path: 'logoImage', label: 'Stats logo' },
-      { kind: 'text', path: 'statsTitle', label: 'Stats title' },
-      { kind: 'text', path: 'statsSub', label: 'Stats subtitle' },
+      { kind: 'image', path: 'logoImage', label: 'Stats logo', variants: ['usecases'] },
+      { kind: 'text', path: 'statsTitle', label: 'Stats title', variants: ['usecases'] },
+      { kind: 'text', path: 'statsSub', label: 'Stats subtitle', variants: ['usecases'] },
       {
         kind: 'list', path: 'stats', label: 'Stats', itemTitle: 'label', addLabel: 'Add stat', max: 4,
+        variants: ['usecases'],
         itemFields: [
           { kind: 'text', path: 'value', label: 'Value' },
           { kind: 'text', path: 'label', label: 'Label' },
@@ -692,14 +797,15 @@ export const PORTAL_REGISTRY: Partial<Record<SectionType, SectionDef>> = {
     ],
     fields: [
       { kind: 'text', path: 'title', label: 'Title', multiline: true },
-      { kind: 'text', path: 'panelTitle', label: 'Panel title (split banner)' },
+      { kind: 'text', path: 'panelTitle', label: 'Panel title', variants: ['split-banner'] },
       { kind: 'text', path: 'sub', label: 'Description', multiline: true },
       button('cta', 'Button'),
-      { kind: 'divider', label: 'App preview' },
-      { kind: 'text', path: 'userName', label: 'User name' },
-      { kind: 'text', path: 'balance', label: 'Balance' },
+      { kind: 'divider', label: 'App preview', variants: ['split-banner'] },
+      { kind: 'text', path: 'userName', label: 'User name', variants: ['split-banner'] },
+      { kind: 'text', path: 'balance', label: 'Balance', variants: ['split-banner'] },
       {
         kind: 'list', path: 'transactions', label: 'Transactions', itemTitle: 'name', addLabel: 'Add transaction', max: 3,
+        variants: ['split-banner'],
         itemFields: [
           { kind: 'icon', path: 'icon', label: 'Icon' },
           { kind: 'text', path: 'name', label: 'Name' },
@@ -709,13 +815,14 @@ export const PORTAL_REGISTRY: Partial<Record<SectionType, SectionDef>> = {
         ],
         template: () => ({ icon: 'Receipt', name: 'Merchant', meta: 'Payment', amount: '$0.00', date: 'Today' }),
       },
-      { kind: 'divider', label: 'Showcase' },
+      { kind: 'divider', label: 'Showcase', variants: ['showcase'] },
       {
         kind: 'list', path: 'steps', label: 'Steps', itemTitle: 'label', addLabel: 'Add step', max: 3,
+        variants: ['showcase'],
         itemFields: [{ kind: 'text', path: 'label', label: 'Label' }],
         template: () => ({ label: 'Step' }),
       },
-      { kind: 'text', path: 'specCode', label: 'Code window', multiline: true },
+      { kind: 'text', path: 'specCode', label: 'Code window', multiline: true, variants: ['showcase'] },
     ],
     defaults: () => ({
       title: 'Start building on our API platform today.',

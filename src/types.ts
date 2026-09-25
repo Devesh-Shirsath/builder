@@ -73,7 +73,7 @@ export interface Selection {
 
 /* --------------------------------------------------------------- fields */
 
-export type Field =
+export type Field = (
   | { kind: 'text'; path: string; label: string; multiline?: boolean; placeholder?: string }
   | { kind: 'image'; path: string; label: string }
   | { kind: 'icon'; path: string; label: string }
@@ -95,6 +95,10 @@ export type Field =
       /** Offer a menu of ready-made items instead of one blank template. */
       presets?: { label: string; hint?: string; make: () => any }[]
     }
+) & {
+  /** Only show this control for the listed section layouts. */
+  variants?: string[]
+}
 
 export interface VariantDef {
   id: string
